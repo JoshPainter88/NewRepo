@@ -515,6 +515,30 @@ kbd {
 .pulse .p .n { font-family: var(--f-display); font-weight: 800; font-size: 1.08rem; text-transform: uppercase; letter-spacing: 0.02em; }
 .pulse .p .c { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--muted); }
 
+/* next 14 days */
+.days { display: flex; flex-direction: column; }
+.day { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 14px; padding: 10px 2px; border-top: 1px solid var(--line-2); }
+.day:first-child { border-top: 0; }
+.day .dd { font-family: var(--f-mono); font-size: var(--t-sm); color: var(--ink); display: flex; flex-direction: column; gap: 1px; padding-top: 2px; }
+.day .dd span { font-size: var(--t-xs); color: var(--muted); }
+.day.overdue .dd { color: var(--crit); font-weight: 700; }
+.day .de { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ev { display: grid; grid-template-columns: 10px minmax(0, auto) minmax(0, 1fr); gap: 10px; align-items: baseline; text-align: left; background: none; border: 0; padding: 3px 4px; border-radius: var(--r-sm); color: var(--ink); }
+.ev:hover { background: var(--surface); }
+.ev .k { width: 8px; height: 8px; border-radius: 2px; background: var(--alu); transform: translateY(-1px); }
+.ev.milestone .k { background: var(--copper); border-radius: 50%; }
+.ev.owe .k { background: var(--ink); }
+.ev.waiting .k { background: transparent; border: 1.5px solid var(--alu); }
+.ev .tx { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev .sb { color: var(--muted); font-size: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  .day { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .day .dd { flex-direction: row; gap: 8px; }
+  .ev { grid-template-columns: 10px minmax(0, 1fr); }
+  .ev .sb { grid-column: 2; white-space: normal; }
+  .ev .tx { white-space: normal; }
+}
+
 /* ---------- detail pages ---------- */
 .crumbs { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: var(--t-sm); flex-wrap: wrap; }
 .crumbs button { background: none; border: 0; padding: 0; color: var(--muted); }

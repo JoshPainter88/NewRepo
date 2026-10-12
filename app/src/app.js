@@ -446,6 +446,31 @@
     });
   }
 
+  // ---------------------------------------------------------------- coming up (next 14 days)
+  function comingUp(days = 14) {
+    const ev = [];
+    for (const p of D.projects) for (const m of arr(p.next_milestones)) {
+      const n = daysFrom(m.date);
+      if (n != null && n >= -1 && n <= days) ev.push({ date: m.date, n, text: m.label, sub: p.name, go: `project|${p.id}`, kind: 'milestone' });
+    }
+    for (const l of openLoops((x) => !!x.due)) {
+      const n = daysFrom(l.due);
+      if (n != null && n <= days) ev.push({ date: l.due, n, text: l.text, sub: [l.direction === 'owed_to_me' ? 'due from ' + (l.counterparty || 'someone') : 'you owe' + (l.counterparty ? ' ' + l.counterparty : ''), l.project].filter(Boolean).join(' · '), loop: l.id, kind: l.direction === 'owed_to_me' ? 'waiting' : 'owe', overdue: n < 0 });
+    }
+    return ev.sort((a, b) => a.n - b.n);
+  }
+  function comingUpSection() {
+    const ev = comingUp();
+    if (!ev.length) return '';
+    const groups = new Map();
+    ev.forEach((e) => push(groups, e.overdue ? 'overdue' : e.date, e));
+    const shown = Array.from(groups.entries()).slice(0, 7);
+    return `<section class="section">${sectionHead('Next 14 days', plural(ev.length, 'date'), `<button class="btn ghost sm" data-go="loops">All loops ${icon('chev')}</button>`)}
+      <div class="panel panel-pad"><div class="days">${shown.map(([d, es]) => `
+        <div class="day ${d === 'overdue' ? 'overdue' : ''}"><div class="dd">${d === 'overdue' ? 'Overdue' : `${fmtDate(d)}<span>${esc(relDay(d))}</span>`}</div>
+          <div class="de">${es.slice(0, 4).map((e) => `<button class="ev ${e.kind}" ${e.loop ? `data-act="open-loop" data-id="${esc(e.loop)}"` : `data-go="${esc(e.go)}"`}><span class="k"></span><span class="tx">${esc(e.text)}</span><span class="sb">${esc(e.sub)}</span></button>`).join('')}${es.length > 4 ? `<span class="muted" style="font-size:var(--t-xs)">+${es.length - 4} more</span>` : ''}</div></div>`).join('')}</div></div></section>`;
+  }
+
   // ---------------------------------------------------------------- views
   const VIEWS = {};
 
@@ -510,6 +535,7 @@
           </section>
         </div>
       </div>
+      ${comingUpSection()}
       <section class="section">
         ${sectionHead('Project pulse', `${D.projects.filter((p) => p.status === 'active').length} active`, `<button class="btn ghost sm" data-go="projects">All projects ${icon('chev')}</button>`)}
         <div class="pulse">${projs.map((p) => {
@@ -1185,8 +1211,11 @@ ${text.slice(0, 180000)}
     if (rebuild) {
       const items = [];
       if (!q.trim()) {
-        const recentProjects = D.projects.slice(0, 5).map((p) => ({ type: 'project', title: p.name, sub: [p.type, STATUS[p.status]?.[1]].filter(Boolean).join(' · '), go: `project|${p.id}`, grp: 'Projects' }));
-        items.push(...ACTIONS.map(([t, g, k]) => ({ type: 'action', title: t, sub: k ? `shortcut ${k}` : '', go: g, grp: 'Jump to' })), ...recentProjects);
+        const seenR = new Set();
+        const recent = S.trail.slice().reverse().concat([{ view: S.view, id: S.id }]).filter((t) => (t.view === 'project' || t.view === 'person') && t.id && !seenR.has(t.view + t.id) && seenR.add(t.view + t.id)).slice(0, 4)
+          .map((t) => { const r = t.view === 'project' ? D.projById.get(t.id) : D.personById.get(t.id); return r ? { type: t.view, title: r.name, sub: t.view === 'project' ? [r.type, STATUS[r.status]?.[1]].filter(Boolean).join(' · ') : [r.role, r.org].filter(Boolean).join(' · '), go: `${t.view}|${t.id}`, grp: 'Where you were' } : null; }).filter(Boolean);
+        const topProjects = D.projects.filter((p) => !seenR.has('project' + p.id)).slice(0, 5).map((p) => ({ type: 'project', title: p.name, sub: [p.type, STATUS[p.status]?.[1]].filter(Boolean).join(' · '), go: `project|${p.id}`, grp: 'Projects' }));
+        items.push(...recent, ...ACTIONS.map(([t, g, k]) => ({ type: 'action', title: t, sub: k ? `shortcut ${k}` : '', go: g, grp: 'Jump to' })), ...topProjects);
       } else {
         const res = searchAll(q, 36);
         const per = {};
