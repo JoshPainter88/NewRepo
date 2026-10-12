@@ -279,9 +279,10 @@
     return l.status || 'open';
   }
   const isOpen = (l) => !['done', 'likely_done', 'dropped'].includes(loopState(l));
+  const prioOf = (l) => Store.data.loops[l.id]?.priority || l.priority || 'soon';
   const PRIO_RANK = { now: 0, soon: 1, later: 2 };
   function loopSort(a, b) {
-    const pa = PRIO_RANK[a.priority] ?? 1, pb = PRIO_RANK[b.priority] ?? 1;
+    const pa = PRIO_RANK[prioOf(a)] ?? 1, pb = PRIO_RANK[prioOf(b)] ?? 1;
     if (pa !== pb) return pa - pb;
     const da = a.due ? daysFrom(a.due) : 9999, db = b.due ? daysFrom(b.due) : 9999;
     if (da !== db) return (da ?? 9999) - (db ?? 9999);
@@ -290,8 +291,15 @@
   function openLoops(filter = () => true) { return allLoops().filter((l) => isOpen(l) && filter(l)).sort(loopSort); }
   function setLoop(id, status) {
     const next = Object.assign({}, Store.data.loops);
-    if (status) next[id] = { status, at: new Date().toISOString() };
+    const keep = next[id]?.priority ? { priority: next[id].priority } : {};
+    if (status) next[id] = Object.assign(keep, { status, at: new Date().toISOString() });
+    else if (keep.priority) next[id] = keep;
     else delete next[id];
+    Store.set('loops', next);
+  }
+  function setPrio(id, priority) {
+    const next = Object.assign({}, Store.data.loops);
+    next[id] = Object.assign({}, next[id] || {}, { priority, pat: new Date().toISOString() });
     Store.set('loops', next);
   }
 
@@ -391,7 +399,7 @@
         ${l.detail && opts.detail !== false ? `<div class="s">${esc(l.detail)}</div>` : ''}
         <div class="s row-wrap" style="gap:6px">${metaTxt ? `<span>${esc(metaTxt)}</span>` : ''}${st === 'likely_done' ? '<span class="pill ok">likely done</span>' : ''}${st === 'blocked' ? '<span class="pill warn">blocked</span>' : ''}${l.mine ? '<span class="pill copper">added by you</span>' : ''}</div>
       </div>
-      <div class="side">${due}${prioTag(l.priority)}${opts.focus !== false && !done ? `<button class="btn ghost sm" data-act="focus" data-id="${esc(l.id)}" title="Focus on this">${icon('focus')}</button>` : ''}</div>
+      <div class="side">${due}${prioTag(prioOf(l))}${opts.focus !== false && !done ? `<button class="btn ghost sm" data-act="focus" data-id="${esc(l.id)}" title="Focus on this">${icon('focus')}</button>` : ''}</div>
     </div>`;
   }
   function loopList(list, { limit = 6, key = 'x', ...opts } = {}) {
@@ -472,6 +480,18 @@
           <div class="de">${es.slice(0, 4).map((e) => `<button class="ev ${e.kind}" ${e.loop ? `data-act="open-loop" data-id="${esc(e.loop)}"` : `data-go="${esc(e.go)}"`}><span class="k"></span><span class="tx">${esc(e.text)}</span><span class="sb">${esc(e.sub)}</span></button>`).join('')}${es.length > 4 ? `<span class="muted" style="font-size:var(--t-xs)">+${es.length - 4} more</span>` : ''}</div></div>`).join('')}</div></div></section>`;
   }
 
+  const LOAD_LIMIT = 7;
+  function loadMeter() {
+    const n = openLoops((l) => l.direction !== 'owed_to_me' && prioOf(l) === 'now').length;
+    const pct = Math.min(100, Math.round((n / LOAD_LIMIT) * 100));
+    const heavy = n > LOAD_LIMIT;
+    return `<div class="load ${heavy ? 'heavy' : ''}" role="group" aria-label="This week's load">
+      <div class="bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
+      <span class="lt">${heavy ? `<strong>${n} things marked this week.</strong> That is more than ${LOAD_LIMIT}. Push a few to later so the rest get done.` : `${n} of ${LOAD_LIMIT} this-week slots used.`}</span>
+      ${heavy ? `<button class="btn sm" data-go="loops||mine">Trim the list</button>` : ''}
+    </div>`;
+  }
+
   // ---------------------------------------------------------------- views
   const VIEWS = {};
 
@@ -521,6 +541,7 @@
       <div class="split">
         <section class="section">
           ${sectionHead('Next up', `${openLoops((l) => l.direction !== 'owed_to_me').length} open you owe`, `<button class="btn ghost sm" data-go="loops">All loops ${icon('chev')}</button>`)}
+          ${loadMeter()}
           <div class="panel panel-pad">${loopList(nextUp, { limit: 5, key: 'today-next', detail: false })}</div>
         </section>
         <div class="stack" style="gap:24px">
@@ -728,7 +749,7 @@
   };
   function groupedLoops(list, key, opts = {}) {
     const g = { now: [], soon: [], later: [] };
-    list.forEach((l) => (g[l.priority] || g.soon).push(l));
+    list.forEach((l) => (g[prioOf(l)] || g.soon).push(l));
     const names = { now: 'This week', soon: 'Soon', later: 'Later' };
     return Object.entries(g).filter(([, v]) => v.length).map(([k, v]) => `<section class="section">${sectionHead(names[k], String(v.length))}<div class="panel panel-pad">${loopList(v, { limit: k === 'now' ? 20 : 8, key: key + k, ...opts })}</div></section>`).join('') || '<div class="empty">All clear.</div>';
   }
@@ -937,7 +958,7 @@
     return {
       today: iso(TODAY), kb_as_of: D.meta.as_of,
       projects: D.projects.map((p) => ({ id: p.id, name: p.name, type: p.type, status: p.status, health: p.health, stage: p.design_stage, focus: p.current_focus })),
-      open_loops_now: openLoops((l) => l.priority === 'now').slice(0, 15).map((l) => ({ text: l.text, dir: l.direction, who: l.counterparty, project: l.project, due: l.due })),
+      open_loops_now: openLoops((l) => prioOf(l) === 'now').slice(0, 15).map((l) => ({ text: l.text, dir: l.direction, who: l.counterparty, project: l.project, due: l.due })),
     };
   }
   function recordFor(type, id) {
@@ -1382,6 +1403,7 @@ ${text.slice(0, 180000)}
         ${l.effort ? `<dt>Effort</dt><dd>${esc(l.effort)}</dd>` : ''}${refs.length ? `<dt>Source</dt><dd>${srcLabel(refs)}</dd>` : ''}
       </dl>
       <div class="row-wrap">${pids.map((p) => `<button class="btn" data-go="project|${esc(p)}">${icon('projects')} ${esc(D.projById.get(p).name)}</button>`).join('')}${hids.map((h) => `<button class="btn" data-go="person|${esc(h)}">${icon('people')} ${esc(D.personById.get(h).name)}</button>`).join('')}${isOpen(l) && l.direction !== 'owed_to_me' ? `<button class="btn primary" data-act="focus" data-id="${esc(l.id)}">${icon('focus')} Focus on this</button>` : ''}</div>
+      ${isOpen(l) ? `<div class="row-wrap"><span class="mini-h">When</span>${[['now', 'This week'], ['soon', 'Soon'], ['later', 'Later']].map(([k, t]) => `<button class="chip" aria-pressed="${prioOf(l) === k}" data-act="set-prio" data-id="${esc(l.id)}" data-p="${k}">${t}</button>`).join('')}</div>` : ''}
     </div>`);
   }
 
@@ -1529,7 +1551,7 @@ ${text.slice(0, 180000)}
     if (nav) nav.innerHTML = NAV.map(([v, t, ic], i) => `${i === 4 ? '<div class="nav-label">Reference</div>' : ''}<button class="nav-item" data-go="${v}" ${active === v ? 'aria-current="page"' : ''}>${icon(ic)}<span>${t}</span>${counts[v] ? `<span class="count">${counts[v]}</span>` : ''}</button>`).join('');
     const tb = $('#tabbar');
     if (tb) tb.innerHTML = [['today', 'Today', 'today'], ['projects', 'Projects', 'projects'], ['loops', 'Loops', 'loops'], ['guide', 'Guide', 'guide'], ['__search', 'Search', 'search']].map(([v, t, ic]) => `<button ${v === '__search' ? 'data-act="palette"' : `data-go="${v}"`} ${active === v ? 'aria-current="page"' : ''}>${icon(ic)}<span>${t}</span></button>`).join('');
-    const now = openLoops((l) => l.priority === 'now' && l.direction !== 'owed_to_me').length;
+    const now = openLoops((l) => prioOf(l) === 'now' && l.direction !== 'owed_to_me').length;
     const wait = openLoops((l) => l.direction === 'owed_to_me').length;
     const j = $('#jacket');
     if (j) j.innerHTML = `${OWNER.org_short ? `<span>${esc(OWNER.org_short)}</span><span class="sep">▪</span>` : ''}<span>${esc(OWNER.program || 'Cable program')}</span><span class="sep">▪</span>${D.meta.demo ? '<span><b>Demo data</b></span><span class="sep">▪</span>' : ''}<span>${DOW[TODAY.getDay()].slice(0, 3)} ${TODAY.getDate()} ${MON[TODAY.getMonth()]} ${TODAY.getFullYear()}</span><span class="sep">▪</span><span>WK ${weekNo(TODAY)}</span><span class="sep">▪</span><span><b>${now}</b> now</span><span class="sep opt">▪</span><span class="opt">${wait} waiting</span><span class="sep opt">▪</span><span class="opt">${D.projects.filter((p) => p.status === 'active').length} active jobs</span><span class="ft" title="Day of the year, printed like footage marks on a cable jacket">${String(dayOfYear(TODAY)).padStart(5, '0')} FT</span>`;
@@ -1593,6 +1615,7 @@ ${text.slice(0, 180000)}
         }
         case 'undo': if (lastUndo) { setLoop(lastUndo.id, null); lastUndo = null; } $('.toast')?.remove(); INDEX = null; render(); return;
         case 'open-loop': openLoopModal(id); return;
+        case 'set-prio': setPrio(id, actEl.dataset.p); $$('[data-act="set-prio"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.p === actEl.dataset.p))); toast(actEl.dataset.p === 'later' ? 'Moved to later. One less thing this week.' : 'Updated.'); INDEX = null; render(); return;
         case 'next-now': S.ui.nowIdx = (S.ui.nowIdx || 0) + 1; if (S.ui.nowIdx >= focusCandidates().length) S.ui.nowIdx = 0; render(); return;
         case 'focus': openFocus(id); return;
         case 'focus-go': focusToggle(); return;

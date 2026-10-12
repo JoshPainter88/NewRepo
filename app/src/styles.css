@@ -515,6 +515,14 @@ kbd {
 .pulse .p .n { font-family: var(--f-display); font-weight: 800; font-size: 1.08rem; text-transform: uppercase; letter-spacing: 0.02em; }
 .pulse .p .c { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--muted); }
 
+/* load meter */
+.load { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--muted); }
+.load .bar { width: 120px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; flex: none; }
+.load .bar span { display: block; height: 100%; background: var(--ok); border-radius: 3px; }
+.load.heavy .bar span { background: var(--warn); }
+.load.heavy { color: var(--ink-2); }
+.load .lt { flex: 1 1 220px; min-width: 0; }
+
 /* next 14 days */
 .days { display: flex; flex-direction: column; }
 .day { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 14px; padding: 10px 2px; border-top: 1px solid var(--line-2); }
