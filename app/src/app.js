@@ -287,7 +287,8 @@
     if (l.status === 'likely_done') return 'likely_done';
     return l.status || 'open';
   }
-  const isOpen = (l) => !['done', 'likely_done', 'dropped', 'stale_closed'].includes(loopState(l));
+  const isOpen = (l) => !['done', 'likely_done', 'dropped', 'stale', 'stale_closed'].includes(loopState(l));
+  const isStale = (l) => loopState(l) === 'stale';
   const prioOf = (l) => Store.data.loops[l.id]?.priority || l.priority || 'soon';
   const PRIO_RANK = { now: 0, soon: 1, later: 2 };
   function loopSort(a, b) {
@@ -356,10 +357,15 @@
       <div class="dfoot">${x.project ? projectChip(x.project) : ''}${receipt(x.source_refs)}</div>
     </article>`;
   }
-  function decisionQueue(list, { limit = 4, key = 'dq', compact = true } = {}) {
+  function decisionQueue(list, { limit = 4, key = 'dq', compact = true, undatedMax = null } = {}) {
     if (!list.length) return '<div class="empty">No open decisions on file.</div>';
     const showAll = S.ui['more:' + key];
-    const shown = showAll ? list : list.slice(0, limit);
+    let shown = showAll ? list : list.slice(0, limit);
+    if (!showAll && undatedMax != null) {
+      const und = list.filter((x) => !x.decide_by), dat = list.filter((x) => x.decide_by);
+      const u = und.slice(0, undatedMax);
+      shown = u.concat(dat.slice(0, Math.max(0, limit - u.length)));
+    }
     const undated = shown.filter((x) => !x.decide_by);
     const dated = shown.filter((x) => x.decide_by);
     return `${undated.length ? `<div class="mini-h">No date set, so nobody owns the clock</div>${undated.map((x) => decisionCard(x, { compact })).join('')}` : ''}
@@ -566,10 +572,16 @@
     out.sort((a, b) => b.items.length - a.items.length || b.oldest - a.oldest);
     return { groups: out, daysWaiting };
   }
+  function stripWho(text, name) {
+    const t = str(text), m = /^([^:]{2,40}):\s+(.+)$/.exec(t);
+    if (!m) return t;
+    const who = norm(m[1]), names = norm(name).split(' ');
+    return names.some((n) => n.length > 1 && who.includes(n)) ? capFirst(m[2]) : t;
+  }
   function chaseNote(g, daysWaiting) {
     const first = str(g.name).split(' ')[0];
     const lines = [`Hi ${first}, checking on a few things I am waiting on:`, ''];
-    g.items.forEach((l) => lines.push(`- ${l.text}${l.project ? ' (' + l.project + ')' : ''}${l.first_seen ? ', asked ' + mdy(l.first_seen) : ''}`));
+    g.items.forEach((l) => lines.push(`- ${stripWho(l.text, g.name)}${l.project ? ' (' + l.project + ')' : ''}${l.first_seen ? ', asked ' + mdy(l.first_seen) : ''}`));
     lines.push('', 'Can you let me know where each one stands?', '', OWNER.first || '');
     return lines.join('\n').replace(/[\u2014\u2013]/g, ', ');
   }
@@ -582,7 +594,7 @@
         <div style="min-width:0"><div class="t">${g.hid ? `<button class="link" style="color:var(--ink)" data-go="person|${esc(g.hid)}">${esc(g.name)}</button>` : esc(g.name)}</div>
         <div class="s">${plural(g.items.length, 'thing')} · oldest ${g.oldest ? g.oldest + ' days' : 'date not known'}</div></div>
         <button class="btn sm" data-act="copy-chase" data-key="${esc(g.key)}" title="Copy a plain note asking for all of these">${icon('copy')} Chase note</button></div>
-        <ul class="wpl">${g.items.slice(0, 4).map((l) => { const d = daysWaiting(l); return `<li><button class="link" style="color:var(--ink-2);font-weight:500" data-act="open-loop" data-id="${esc(l.id)}">${esc(l.text)}</button><span class="wd ${d != null && d > 14 ? 'old' : ''}">${d != null ? d + 'd' : ''}${l.times_raised > 1 ? ' · asked ' + l.times_raised + 'x' : ''}</span></li>`; }).join('')}${g.items.length > 4 ? `<li class="muted">+${g.items.length - 4} more</li>` : ''}</ul></div>`).join('')}</div>
+        <ul class="wpl">${g.items.slice(0, 4).map((l) => { const d = daysWaiting(l); return `<li><button class="link" style="color:var(--ink-2);font-weight:500;text-align:left" data-act="open-loop" data-id="${esc(l.id)}">${esc(stripWho(l.text, g.name))}</button><span class="wd ${d != null && d > 14 ? 'old' : ''}">${d != null ? d + 'd' : ''}${l.times_raised > 1 ? ' · asked ' + l.times_raised + 'x' : ''}</span></li>`; }).join('')}${g.items.length > 4 ? `<li class="muted">+${g.items.length - 4} more</li>` : ''}</ul></div>`).join('')}</div>
       ${groups.length > limitPeople ? `<button class="btn ghost sm more" data-act="more" data-key="wbp">${showAll ? 'Show fewer' : `Show all ${groups.length} people`}</button>` : ''}`;
   }
   function twentySection() {
@@ -649,7 +661,7 @@
       <div class="split">
         <section class="section">
           ${sectionHead('Decide next', decs.length ? `${plural(decs.length, 'open decision')} · soonest deadline first` : '', `<button class="btn ghost sm" data-go="loops||decisions">All decisions ${icon('chev')}</button>`)}
-          <div class="dqueue">${decisionQueue(decs, { limit: 4, key: 'today-dq' })}</div>
+          <div class="dqueue">${decisionQueue(decs, { limit: 5, key: 'today-dq', undatedMax: 2 })}</div>
         </section>
         <div class="stack" style="gap:16px">
           ${nowCard}
@@ -894,14 +906,16 @@
     const pf = (l) => !projFilter || projectIdsIn(l.project).includes(projFilter);
     const iOwe = openLoops((l) => l.direction !== 'owed_to_me' && pf(l));
     const owed = openLoops((l) => l.direction === 'owed_to_me' && pf(l));
-    const closed = allLoops().filter((l) => !isOpen(l) && pf(l)).sort((a, b) => str(b.last_seen).localeCompare(str(a.last_seen)));
+    const closed = allLoops().filter((l) => !isOpen(l) && !isStale(l) && pf(l)).sort((a, b) => str(b.last_seen).localeCompare(str(a.last_seen)));
+    const stale = allLoops().filter((l) => isStale(l) && pf(l)).sort((a, b) => str(b.last_seen).localeCompare(str(a.last_seen)));
     const projOpts = D.projects.map((p) => `<option value="${esc(p.id)}" ${projFilter === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
     return `
       <header class="page-head"><div class="titles"><span class="eyebrow">Commitments from your calls and desk docs · as of ${esc(D.meta.as_of || '')}</span><h1 class="page-title">Loops</h1></div>
         <div class="row-wrap"><select class="select" id="loop-proj" data-filter-select="loopProj" aria-label="Filter by project"><option value="">All projects</option>${projOpts}</select><button class="btn" data-act="new-loop">${icon('plus')} Add loop</button><button class="btn ghost no-print" data-act="${S.tab === 'decisions' || (!S.tab && openDecisions().length) ? 'export-decisions' : 'export-loops'}">Export CSV</button></div></header>
-      <div class="filters">${[['decisions', 'Decisions', openDecisions((x) => !projFilter || projectIdsIn(x.project).includes(projFilter)).length], ['mine', 'You owe', iOwe.length], ['waiting', 'Waiting on', owed.length], ['closed', 'Closed', closed.length]].map(([k, t, c]) => `<button class="chip" aria-pressed="${tab === k}" data-go="loops||${k}">${t} <span class="muted">${c}</span></button>`).join('')}</div>
+      <div class="filters">${[['decisions', 'Decisions', openDecisions((x) => !projFilter || projectIdsIn(x.project).includes(projFilter)).length], ['mine', 'You owe', iOwe.length], ['waiting', 'Waiting on', owed.length], ['stale', 'Gone quiet', stale.length], ['closed', 'Closed', closed.length]].map(([k, t, c]) => `<button class="chip" aria-pressed="${tab === k}" data-go="loops||${k}">${t} <span class="muted">${c}</span></button>`).join('')}</div>
       ${tab === 'decisions' ? `<div class="dqueue">${decisionQueue(openDecisions((x) => !projFilter || projectIdsIn(x.project).includes(projFilter)), { limit: 60, key: 'lo-d', compact: false })}</div>${D.decisions.filter((x) => !isDecOpen(x)).length ? `<section class="section">${sectionHead('Closed decisions', String(D.decisions.filter((x) => !isDecOpen(x)).length))}<div class="dqueue">${D.decisions.filter((x) => !isDecOpen(x)).map((x) => decisionCard(x, { compact: true })).join('')}</div></section>` : ''}`
-        : tab === 'mine' ? groupedLoops(iOwe, 'lo-o') : tab === 'waiting' ? `<div class="panel panel-pad">${waitingSection(60)}</div>` : `<div class="panel panel-pad">${loopList(closed, { limit: 30, key: 'lo-c' })}</div>`}`;
+        : tab === 'mine' ? groupedLoops(iOwe, 'lo-o') : tab === 'waiting' ? `<div class="panel panel-pad">${waitingSection(60)}</div>`
+        : tab === 'stale' ? `<p class="muted" style="max-width:70ch">Nobody has mentioned these in a few weeks. Reopen what is still live, drop the rest.</p><div class="panel panel-pad"><div class="list">${stale.map((l) => `<div class="item"><span class="bullet"></span><div style="min-width:0"><div class="t"><button class="link" style="color:inherit" data-act="open-loop" data-id="${esc(l.id)}">${esc(l.text)}</button></div><div class="s">${esc([l.counterparty, l.project, l.last_seen ? 'last heard ' + mdy(l.last_seen) : ''].filter(Boolean).join(' · '))}</div></div><span class="side"><button class="btn sm" data-act="reopen-loop" data-id="${esc(l.id)}">Still live</button><button class="btn ghost sm" data-act="drop-loop" data-id="${esc(l.id)}">Drop</button></span></div>`).join('') || '<div class="empty">Nothing has gone quiet.</div>'}</div></div>` : `<div class="panel panel-pad">${loopList(closed, { limit: 30, key: 'lo-c' })}</div>`}`;
   };
   function groupedLoops(list, key, opts = {}) {
     const g = { past: [], gated: [], now: [], soon: [], later: [] };
