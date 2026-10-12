@@ -1,0 +1,4 @@
+# Private working data — confidential work content. NEVER commit (repo is public).
+private/
+data/private*
+*.private.*
