@@ -399,14 +399,22 @@
     const shown = showAll ? list : list.slice(0, limit);
     return `<div class="list">${shown.map((l) => loopItem(l, opts)).join('')}</div>${list.length > limit ? `<button class="btn ghost sm more" data-act="more" data-key="${esc(key)}">${showAll ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}`;
   }
+  function splitTitle(t) {
+    const s = str(t).replace(/^\s*\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?\s*[-–:]?\s*/, '');
+    const i = s.indexOf(': ');
+    if (i > 0 && i < 48) return { kind: s.slice(0, i), main: s.slice(i + 2) };
+    return { kind: '', main: s };
+  }
+  const meetTitle = (m) => splitTitle(m.title).main || str(m.title);
   function meetingRow(m, { open = false } = {}) {
+    const tt = splitTitle(m.title);
     const projs = meetProjects(m).map((id) => D.projById.get(id)).filter(Boolean);
     const decisions = arr(m.decisions), actions = arr(m.action_items), facts = arr(m.facts);
     return `<details class="meet" id="meet-${esc(m.id)}" ${open ? 'open' : ''}>
       <summary>
         <span class="date">${fmtDate(m.date)}</span>
-        <span style="min-width:0"><span class="mt">${esc(m.title)}</span>
-          <span class="row-wrap" style="margin-top:4px;gap:6px">${projs.map((p) => `<span class="pill plain">${tapeFor(p.type)} ${esc(p.name)}</span>`).join('')}${m.kind && m.kind !== 'work_meeting' ? `<span class="pill plain">${esc(str(m.kind).replace(/_/g, ' '))}</span>` : ''}</span>
+        <span style="min-width:0"><span class="mt">${esc(tt.main || m.title)}</span>
+          <span class="row-wrap" style="margin-top:4px;gap:6px">${tt.kind ? `<span class="muted" style="font-size:var(--t-xs)">${esc(tt.kind)}</span>` : ''}${projs.map((p) => `<span class="pill plain">${tapeFor(p.type)} ${esc(p.name)}</span>`).join('')}</span>
         </span>
         <span class="chev">${icon('chev')}</span>
       </summary>
@@ -796,7 +804,7 @@
     return `
       <header class="page-head"><div class="titles"><span class="eyebrow">${plural(D.meetings.length, 'recorded call')} · newest first</span><h1 class="page-title">Calls</h1></div>
         <div class="row-wrap"><input class="input" id="meet-q" data-filter="meetQ" placeholder="Search calls…" value="${esc(S.ui.meetQ || '')}" style="flex:1 1 220px"><select class="select" id="meet-proj" data-filter-select="meetProj" aria-label="Filter by project"><option value="">All projects</option>${projOpts}</select>
-        <button class="chip" aria-pressed="${showPersonal}" data-act="toggle-ui" data-key="meetPersonal">Show personal</button></div></header>
+</div></header>
       <section class="section" id="live-section">${liveSection()}</section>
       ${Array.from(byWeek.entries()).map(([wk, ms]) => `<section class="section">${sectionHead('Week ' + wk.split('W')[1], `${fmtDate(ms[ms.length - 1].date, false)} – ${fmtDate(ms[0].date, false)} · ${plural(ms.length, 'call')}`)}<div class="panel panel-pad">${ms.map((m) => meetingRow(m, { open: m.id === target })).join('')}</div></section>`).join('') || '<div class="empty">No calls match.</div>'}`;
   };
@@ -1096,7 +1104,7 @@ ${text.slice(0, 180000)}
     D.projects.forEach((p) => add('project', p.id, p.name, [p.type, STATUS[p.status]?.[1], p.current_focus].filter(Boolean).join(' · '), [p.aliases.join(' '), p.client_or_owner, p.status_note, arr(p.vendors).join(' ')], p, `project|${p.id}`));
     D.people.forEach((p) => add('person', p.id, p.name, [p.role, p.org].filter(Boolean).join(' · '), [p.aliases.join(' '), arr(p.projects).join(' '), arr(p.topics).join(' ')], p, `person|${p.id}`));
     allLoops().filter(isOpen).forEach((l) => add('loop', l.id, l.text, [l.direction === 'owed_to_me' ? 'waiting on' : 'you owe', l.counterparty, l.project].filter(Boolean).join(' · '), [l.detail], l, 'loops'));
-    D.meetings.filter((m) => !m.personal_flag).forEach((m) => add('meeting', m.id, m.title, fmtDate(m.date), [m.summary, arr(m.topics).join(' ')], m, `meetings||${m.id}`));
+    D.meetings.filter((m) => !m.personal_flag).forEach((m) => add('meeting', m.id, meetTitle(m), fmtDate(m.date), [m.summary, arr(m.topics).join(' ')], m, `meetings||${m.id}`));
     R.rules_of_thumb.forEach((r, i) => add('rule', 'r' + i, r.title, r.rule, [r.why], r, 'guide||rules'));
     R.cable_catalog.forEach((c, i) => add('cable', 'c' + i, c.item, [c.type, c.inventory_or_stock].filter(Boolean).join(' · '), [c.notes, arr(c.where_used).join(' '), arr(c.vendors).join(' ')], c, 'guide||cable'));
     R.glossary.forEach((g, i) => add('glossary', 'g' + i, g.term, g.meaning, [], g, 'guide||glossary'));
@@ -1291,7 +1299,7 @@ ${text.slice(0, 180000)}
     if (owe.length) { lines.push('I owe:'); owe.forEach((l) => lines.push(`- ${l.text}${l.due ? ' (due ' + l.due + ')' : ''}`)); lines.push(''); }
     if (wait.length) { lines.push('Waiting on:'); wait.forEach((l) => lines.push(`- ${l.text}${l.counterparty ? ' — ' + l.counterparty : ''}`)); lines.push(''); }
     d.projs.forEach((p) => lines.push(`${p.name}: ${p.current_focus || p.status_note || ''}`));
-    if (d.meets.length) { lines.push('', 'Last calls:'); d.meets.forEach((m) => lines.push(`- ${m.date} ${m.title}`)); }
+    if (d.meets.length) { lines.push('', 'Last calls:'); d.meets.forEach((m) => lines.push(`- ${m.date} ${meetTitle(m)}`)); }
     return lines.join('\n');
   }
   function openPrep(kind, id) {
