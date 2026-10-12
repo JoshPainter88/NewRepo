@@ -2,3 +2,4 @@
 private/
 data/private*
 *.private.*
+dist/

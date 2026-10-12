@@ -1,0 +1,483 @@
+{
+ "meta": {
+  "as_of": "2026-10-09",
+  "plaud_through": "2026-10-09",
+  "demo": true,
+  "note": "Fictional demo data. Real data is built privately and never committed.",
+  "owner": {
+   "first": "Sam",
+   "full": "Sam Example",
+   "initials": "SE",
+   "org_short": "EXAMPLE EPC",
+   "program": "Cable program",
+   "context": "Sam runs the cable procurement program for a renewable EPC (fictional demo persona)."
+  }
+ },
+ "projects": [
+  {
+   "id": "harrow-creek",
+   "name": "Harrow Creek",
+   "aliases": [
+    "Harrow"
+   ],
+   "type": "PV",
+   "client_or_owner": "Example Energy LLC",
+   "location": "West Texas",
+   "status": "active",
+   "health": "amber",
+   "design_stage": "90%",
+   "my_role": "Owns MV reel plan and cable procurement",
+   "current_focus": "Lock the MV reel plan against the 90% set and release the master-reel PO before the price hold expires.",
+   "status_note": "90% drawings in; two feeder routes still moving.",
+   "next_milestones": [
+    {
+     "label": "Reel plan freeze",
+     "date": "2026-10-16"
+    },
+    {
+     "label": "First MV delivery",
+     "date": "2026-11-03"
+    }
+   ],
+   "cable_scope": {
+    "mv": "1/C 1000 kcmil AL 35 kV, ~410k ft",
+    "dc": "Harness by tracker vendor",
+    "fiber": "48-strand SMF, ~60k ft"
+   },
+   "key_numbers": [
+    {
+     "label": "MV footage",
+     "value": "410,000 ft"
+    },
+    {
+     "label": "Reels",
+     "value": "92 master"
+    },
+    {
+     "label": "Price hold",
+     "value": "to 2026-10-20"
+    }
+   ],
+   "risks": [
+    {
+     "text": "Feeder reroute at 90% could add 6-8% footage",
+     "severity": "high"
+    },
+    {
+     "text": "Laydown yard not confirmed",
+     "severity": "med"
+    }
+   ],
+   "decisions": [
+    {
+     "date": "2026-10-02",
+     "text": "Use master reels with wholesale cut-down for MV"
+    }
+   ],
+   "timeline": [
+    {
+     "date": "2026-09-18",
+     "event": "60% to 90% design jump; takeoff redone from CAD"
+    },
+    {
+     "date": "2026-10-07",
+     "event": "Price hold extended two weeks"
+    }
+   ],
+   "people": [
+    {
+     "name": "Dana Ruiz",
+     "role": "Wholesale rep"
+    },
+    {
+     "name": "Priya Natarajan",
+     "role": "Electrical engineer"
+    }
+   ],
+   "vendors": [
+    "Example Wholesale"
+   ],
+   "drive_links": []
+  },
+  {
+   "id": "lone-mesa",
+   "name": "Lone Mesa",
+   "aliases": [],
+   "type": "BESS",
+   "client_or_owner": "Sample Storage Co",
+   "status": "active",
+   "health": "green",
+   "design_stage": "IFC",
+   "current_focus": "Deliveries started; track reel returns and spare counts.",
+   "next_milestones": [
+    {
+     "label": "Last reel delivery",
+     "date": "2026-10-24"
+    }
+   ],
+   "cable_scope": {
+    "mv": "1/C 500 kcmil AL 35 kV",
+    "dc": "",
+    "fiber": "",
+    "other": "4/0 bare Cu ground"
+   },
+   "key_numbers": [
+    {
+     "label": "Reels on site",
+     "value": "38 of 44"
+    }
+   ],
+   "risks": [],
+   "decisions": [],
+   "timeline": [
+    {
+     "date": "2026-10-06",
+     "event": "Reel delivery 6 of 8 received"
+    }
+   ],
+   "people": [
+    {
+     "name": "Marcus Bell",
+     "role": "Site superintendent"
+    }
+   ],
+   "vendors": [
+    "Example Wholesale"
+   ],
+   "drive_links": []
+  },
+  {
+   "id": "bluestem",
+   "name": "Bluestem",
+   "aliases": [],
+   "type": "PV+BESS",
+   "client_or_owner": "Placeholder Renewables",
+   "status": "on_hold",
+   "health": "red",
+   "design_stage": "60%",
+   "current_focus": "On hold past LNTP 4. Keep quantities current, do not release POs.",
+   "next_milestones": [
+    {
+     "label": "LNTP 6 (expected)",
+     "date": "2026-10-30"
+    }
+   ],
+   "cable_scope": {
+    "mv": "TBD at 90%"
+   },
+   "key_numbers": [],
+   "risks": [
+    {
+     "text": "Schedule slip if LNTP 6 moves again",
+     "severity": "high"
+    }
+   ],
+   "decisions": [],
+   "timeline": [],
+   "people": [],
+   "vendors": [],
+   "drive_links": []
+  }
+ ],
+ "people": [
+  {
+   "id": "dana-ruiz",
+   "name": "Dana Ruiz",
+   "org": "Example Wholesale",
+   "role": "Account rep",
+   "relationship": "Holds inventory and cut-down for MV; send reel lists by Tuesday for Friday cuts.",
+   "projects": [
+    "Harrow Creek",
+    "Lone Mesa"
+   ],
+   "topics": [
+    "reel lists",
+    "pricing",
+    "returns"
+   ],
+   "last_seen": "2026-10-08",
+   "interaction_count": 14,
+   "tips": "Prefers one consolidated list over many small emails."
+  },
+  {
+   "id": "priya-natarajan",
+   "name": "Priya Natarajan",
+   "org": "Engineering",
+   "role": "Electrical engineer",
+   "relationship": "Owns CAD runs; source of truth for point-to-point lengths.",
+   "projects": [
+    "Harrow Creek"
+   ],
+   "topics": [
+    "takeoffs",
+    "CAD"
+   ],
+   "last_seen": "2026-10-06",
+   "interaction_count": 6
+  },
+  {
+   "id": "marcus-bell",
+   "name": "Marcus Bell",
+   "org": "Site",
+   "role": "Superintendent",
+   "relationship": "Receives reels and reports spare counts.",
+   "projects": [
+    "Lone Mesa"
+   ],
+   "topics": [
+    "deliveries"
+   ],
+   "last_seen": "2026-10-08",
+   "interaction_count": 5
+  }
+ ],
+ "vendors": [
+  {
+   "name": "Example Wholesale",
+   "type": "distributor",
+   "supplies": "MV/LV cable, cut-down, storage",
+   "contacts": [
+    "Dana Ruiz"
+   ],
+   "notes": "Return terms on uncut masters",
+   "projects": [
+    "Harrow Creek",
+    "Lone Mesa"
+   ]
+  }
+ ],
+ "rhythm": [
+  {
+   "name": "Weekly cable coordination",
+   "cadence": "weekly",
+   "day_time": "Mondays 9:00",
+   "attendees": [
+    "Dana Ruiz"
+   ],
+   "purpose": "Inventory, cut lists, deliveries"
+  },
+  {
+   "name": "Harrow Creek procurement sync",
+   "cadence": "weekly",
+   "day_time": "Wednesdays 1:30",
+   "attendees": [
+    "Priya Natarajan"
+   ],
+   "purpose": "BOM and reel plan"
+  }
+ ],
+ "reference": {
+  "rules_of_thumb": [
+   {
+    "title": "Cut length buffer",
+    "rule": "Add 50 ft on each end plus 2% on the total.",
+    "why": "Covers terminations and routing variance."
+   },
+   {
+    "title": "Take lengths from CAD",
+    "rule": "Use engineering CAD point-to-point lengths, not hand measurements.",
+    "why": "One source of truth across ops and engineering."
+   }
+  ],
+  "cable_catalog": [
+   {
+    "item": "1/C 1000 kcmil AL 35kV",
+    "type": "MV",
+    "inventory_or_stock": "~120k ft at wholesale",
+    "where_used": [
+     "Harrow Creek"
+    ],
+    "vendors": [
+     "Example Wholesale"
+    ],
+    "notes": "Demo row"
+   }
+  ],
+  "processes": [
+   {
+    "name": "Reel plan to PO",
+    "steps": [
+     "Pull CAD lengths",
+     "Apply buffer rule",
+     "Group cuts onto master reels",
+     "Review with site",
+     "Release PO"
+    ],
+    "raci": "JP builds, engineering reviews, procurement releases",
+    "pitfalls": [
+     "Design changes after freeze"
+    ]
+   }
+  ],
+  "glossary": [
+   {
+    "term": "MV",
+    "meaning": "Medium voltage (here 34.5 kV collection)"
+   },
+   {
+    "term": "LNTP",
+    "meaning": "Limited notice to proceed"
+   },
+   {
+    "term": "IFC",
+    "meaning": "Issued for construction"
+   },
+   {
+    "term": "Master reel",
+    "meaning": "Full-length reel cut down later to job lengths"
+   }
+  ],
+  "formulas": [],
+  "tools": [
+   {
+    "name": "Bluebeam",
+    "used_for": "Markups and measurements"
+   }
+  ],
+  "key_docs": [
+   {
+    "title": "Demo reel plan template",
+    "url": "https://example.com",
+    "folder": "Reel plans",
+    "use_when": "Starting a new reel plan"
+   }
+  ],
+  "pricing_and_commercial": [
+   {
+    "topic": "Price hold",
+    "detail": "Holds typically 30 days; extensions need written confirmation.",
+    "as_of": "2026-10"
+   }
+  ]
+ },
+ "loops": [
+  {
+   "id": "L001",
+   "text": "Send Harrow Creek reel list to Dana",
+   "detail": "Consolidated list from the 90% CAD takeoff",
+   "direction": "i_owe",
+   "counterparty": "Dana Ruiz",
+   "project": "Harrow Creek",
+   "due": "2026-10-14",
+   "first_seen": "2026-10-06",
+   "last_seen": "2026-10-08",
+   "status": "open",
+   "priority": "now",
+   "effort": "30min"
+  },
+  {
+   "id": "L002",
+   "text": "Confirm feeder 3 reroute length",
+   "direction": "owed_to_me",
+   "counterparty": "Priya Natarajan",
+   "project": "Harrow Creek",
+   "due": "2026-10-13",
+   "status": "open",
+   "priority": "now"
+  },
+  {
+   "id": "L003",
+   "text": "Reconcile Lone Mesa spare counts",
+   "direction": "i_owe",
+   "counterparty": "Marcus Bell",
+   "project": "Lone Mesa",
+   "status": "open",
+   "priority": "soon"
+  },
+  {
+   "id": "L004",
+   "text": "Return quote for uncut masters",
+   "direction": "owed_to_me",
+   "counterparty": "Dana Ruiz",
+   "project": "Lone Mesa",
+   "status": "open",
+   "priority": "soon"
+  },
+  {
+   "id": "L005",
+   "text": "Update Bluestem quantities to 60% set",
+   "direction": "i_owe",
+   "project": "Bluestem",
+   "status": "open",
+   "priority": "later"
+  },
+  {
+   "id": "L006",
+   "text": "Share buffer rule write-up with engineering",
+   "direction": "i_owe",
+   "counterparty": "Priya Natarajan",
+   "status": "likely_done",
+   "priority": "soon"
+  }
+ ],
+ "meetings": [
+  {
+   "id": "demo-1",
+   "title": "10-08 Reel delivery and spare count follow-up",
+   "date": "2026-10-08",
+   "duration_min": 20,
+   "kind": "work_call",
+   "projects": [
+    "Lone Mesa"
+   ],
+   "people": [
+    {
+     "name": "Marcus Bell"
+    }
+   ],
+   "summary": "Six of eight deliveries are in. Two reels short-shipped; spare counts need reconciling against the reel plan.",
+   "decisions": [
+    {
+     "text": "Hold the last delivery until counts match"
+    }
+   ],
+   "action_items": [
+    {
+     "owner": "Sam",
+     "task": "Reconcile spare counts"
+    }
+   ],
+   "facts": [
+    {
+     "fact": "38 of 44 reels on site"
+    }
+   ]
+  },
+  {
+   "id": "demo-2",
+   "title": "10-06 Harrow Creek 90% takeoff review",
+   "date": "2026-10-06",
+   "duration_min": 45,
+   "kind": "work_meeting",
+   "projects": [
+    "Harrow Creek"
+   ],
+   "people": [
+    {
+     "name": "Priya Natarajan"
+    },
+    {
+     "name": "Dana Ruiz"
+    }
+   ],
+   "summary": "Walked the 90% CAD runs. Feeder 3 may reroute; everything else is frozen.",
+   "decisions": [
+    {
+     "text": "Freeze all feeders except feeder 3"
+    }
+   ],
+   "action_items": [
+    {
+     "owner": "Priya",
+     "task": "Confirm feeder 3 length"
+    },
+    {
+     "owner": "Sam",
+     "task": "Send consolidated reel list"
+    }
+   ],
+   "facts": []
+  }
+ ],
+ "brief": {}
+}

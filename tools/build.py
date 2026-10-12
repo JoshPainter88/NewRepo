@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Build Cable Desk into one self-contained HTML file.
+
+  python tools/build.py --data app/sample-data.json --out dist/demo.html
+  python tools/build.py --data private/kb/os_data.json --files files.json --out dist/cable-desk.html
+  python tools/build.py --data ... --artifact --out dist/artifact.html   # page body only, for claude.ai
+
+The data file is the knowledge base (see README "Data contract"). --files is the optional
+index written by tools/Build-FileIndex.ps1. Output with real data must stay out of git.
+"""
+import argparse
+import json
+import pathlib
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SRC = ROOT / "app" / "src"
+
+
+def js_literal(obj) -> str:
+    """JSON that is safe to place inside a <script> element."""
+    s = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+
+
+def build(data_path, files_path, out_path, artifact):
+    shell = (SRC / "shell.html").read_text(encoding="utf-8")
+    css = (SRC / "styles.css").read_text(encoding="utf-8")
+    app = (SRC / "app.js").read_text(encoding="utf-8")
+    data = json.loads(pathlib.Path(data_path).read_text(encoding="utf-8"))
+    files = None
+    if files_path:
+        raw = pathlib.Path(files_path).read_text(encoding="utf-8-sig").strip()
+        if raw.startswith("window.OS_FILES"):
+            raw = raw.split("=", 1)[1].strip().rstrip(";")
+        files = json.loads(raw)
+
+    page = (
+        shell.replace("/*__CSS__*/", css)
+        .replace("/*__DATA__*/", js_literal(data))
+        .replace("/*__FILES__*/", js_literal(files))
+        .replace("/*__APP__*/", app.replace("</script", "<\\/script"))
+    )
+    if not artifact:
+        page = (
+            '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+            + page.replace('<div id="app"', '</head>\n<body>\n<div id="app"', 1)
+            + "\n</body>\n</html>\n"
+        )
+    out = pathlib.Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KB)")
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--data", required=True, help="knowledge-base JSON")
+    ap.add_argument("--files", help="optional file index (files.json or files.js)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--artifact", action="store_true", help="emit page body only (claude.ai adds the document skeleton)")
+    a = ap.parse_args()
+    build(a.data, a.files, a.out, a.artifact)
