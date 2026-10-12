@@ -991,8 +991,11 @@
         const unknownAlloc = allocs.length - allocKnown.length;
         const max = Math.max(1, ...known, allocTotal);
         const age = staleDays(it.as_of);
+        const isOrder = (x) => /on order|ordered|open po|in transit/i.test(str(x.name));
+        const sumOf = (list) => list.map((x) => ftOf(x.ft)).filter((v) => v != null).reduce((a, b) => a + b, 0);
+        const hand = sumOf(pools.filter((x) => !isOrder(x))), order = sumOf(pools.filter(isOrder));
         const recon = pools.length
-          ? `Pools ${fmtN(total)} ft${unknownPools ? ` + ${plural(unknownPools, 'pool')} with no footage on file` : ''} · counted on by projects ${fmtN(allocTotal)} ft${unknownAlloc ? ` + ${unknownAlloc} with no footage` : ''}${!unknownPools && !unknownAlloc ? ` · difference ${fmtN(total - allocTotal)} ft` : ' · these do not sum until the blanks are filled'}`
+          ? `In hand ${fmtN(hand)} ft${order ? ` · on order ${fmtN(order)} ft` : ''}${unknownPools ? ` · ${plural(unknownPools, 'pool')} with no footage on file` : ''} · counted on by projects ${fmtN(allocTotal)} ft${unknownAlloc ? ` + ${unknownAlloc} with no footage` : ''}${!unknownPools && !unknownAlloc ? ` · in hand minus counted on ${fmtN(hand - allocTotal)} ft${order ? `, ${fmtN(hand + order - allocTotal)} ft once orders land` : ''}` : ' · these do not sum until the blanks are filled'}`
           : 'No pools on file for this size.';
         return `<section class="inv panel panel-pad">
           <div class="inv-head"><div><div class="inv-item mono">${esc(it.item)}</div><div class="muted" style="font-size:var(--t-sm)">${esc([it.type, it.lead_time ? 'lead time ' + it.lead_time : ''].filter(Boolean).join(' · '))}</div></div>
