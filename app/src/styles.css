@@ -1,5 +1,5 @@
 /* Layout: a control-board left rail + one calm working column; phones get a bottom tab bar.
-   Palette and type: Josh's 9/7 design signature. Ground, ink, bronze for today/answer/input, red for broken or waiting, green for done. */
+   Palette and type: the owner's 9/7 design signature. Ground, ink, bronze for today/answer/input, red for broken or waiting, green for done. */
 :root {
   --bg: #f4f5f7;
   --surface: #eceef1;
