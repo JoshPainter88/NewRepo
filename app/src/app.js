@@ -725,7 +725,7 @@
     const pct = stagePct(p.design_stage);
     return `<article class="pcard" role="link" tabindex="0" data-go="project|${esc(p.id)}" aria-label="${esc(p.name)}">
       <div class="top">${tapeFor(p.type)}<div style="min-width:0"><div class="name">${esc(p.name)}</div><div class="client">${esc([p.type, p.client_or_owner].filter(Boolean).join(' · '))}</div></div>${ring(pct, p.design_stage)}</div>
-      <div class="row-wrap">${statusPill(p.status)}${p.design_stage ? `<span class="pill plain">${esc(p.design_stage)}</span>` : ''}${healthDot(p.health)}</div>
+      <div class="row-wrap">${statusPill(p.status)}${p.design_stage ? `<span class="pill plain" title="${esc(p.design_stage)}">${esc(str(p.design_stage).length > 26 ? str(p.design_stage).slice(0, 24) + '…' : p.design_stage)}</span>` : ''}${healthDot(p.health)}</div>
       ${p.current_focus || p.status_note ? `<p class="focus">${esc(p.current_focus || p.status_note)}</p>` : ''}
       ${arr(p.essentials?.missing).length ? `<div class="miss-line">${icon('info')} Missing: ${esc(arr(p.essentials.missing).slice(0, 2).join('; '))}</div>` : ''}
       <div class="foot"><span><b>${open.length}</b> open</span><span><b>${(IDX.meetsByProject.get(p.id) || []).length}</b> calls</span>${p.essentials?.clock?.date ? `<span>${icon('clock')} ${esc(p.essentials.clock.label || 'Next')} <b>${esc(fmtDate(p.essentials.clock.date, false))}</b></span>` : nextM ? `<span>${icon('clock')} ${esc(nextM.label)} <b>${parseDate(nextM.date) ? fmtDate(nextM.date, false) : esc(nextM.date)}</b></span>` : ''}</div>
@@ -765,7 +765,7 @@
                 ${p.design_stage ? `<dt>Design</dt><dd>${esc(p.design_stage)}</dd>` : ''}
                 ${p.my_role ? `<dt>Your role</dt><dd>${esc(p.my_role)}</dd>` : ''}
               </dl>
-              <div class="row-wrap"><button class="btn" data-act="prep" data-kind="project" data-id="${esc(p.id)}">${icon('prep')} Prep sheet <kbd>P</kbd></button><button class="btn ghost" data-act="ask-about" data-q="${esc('Where do things stand on ' + p.name + ' and what should I push on next?')}">${icon('ask')} Ask</button></div>
+              <div class="row-wrap"><button class="btn" data-act="prep" data-kind="project" data-id="${esc(p.id)}">${icon('prep')} Brief <kbd>P</kbd></button>${ASK.sample ? `<button class="btn ghost" data-act="ask-about" data-q="${esc('Where do things stand on ' + p.name + ' and what should I push on next?')}">${icon('ask')} Ask</button>` : ''}</div>
             </section>
             ${arr(p.next_milestones).length ? `<section class="section">${sectionHead('Milestones')}<div class="panel panel-pad"><div class="list">${arr(p.next_milestones).map((m) => `<div class="item"><span class="bullet"></span><div><div class="t">${esc(m.label)}</div></div><span class="side mono">${parseDate(m.date) ? `${fmtDate(m.date)} · ${esc(relDay(m.date))}` : esc(m.date)}</span></div>`).join('')}</div></div></section>` : ''}
             <section class="section">${sectionHead('Open loops', plural(openL.length, 'item'), `<button class="btn ghost sm" data-go="project|${esc(p.id)}|loops">All ${icon('chev')}</button>`)}<div class="panel panel-pad">${loopList(openL, { limit: 4, key: 'proj-ov-' + p.id, hideProject: true, detail: false })}</div></section>
@@ -874,7 +874,7 @@
       <header class="page-head">
         <span class="avatar lg">${esc(initials(p.name))}</span>
         <div class="titles"><span class="eyebrow">${esc([p.role, p.org].filter(Boolean).join(' · ') || 'Contact')}</span><h1 class="page-title">${esc(p.name)}</h1>${p.aliases.length ? `<span class="muted" style="font-size:var(--t-sm)">Also heard as: ${esc(p.aliases.join(', '))}</span>` : ''}</div>
-        <div class="row-wrap"><button class="btn primary" data-act="prep" data-kind="person" data-id="${esc(p.id)}">${icon('prep')} Prep for a call <kbd>P</kbd></button></div>
+        <div class="row-wrap"><button class="btn primary" data-act="prep" data-kind="person" data-id="${esc(p.id)}">${icon('prep')} Brief for a call <kbd>P</kbd></button></div>
       </header>
       <div class="split">
         <div class="stack" style="gap:22px">
@@ -1834,7 +1834,7 @@ ${text.slice(0, 180000)}
   }
 
   function helpModal() {
-    const keys = [['Ctrl K or /', 'Find anything'], ['Tab (in search)', 'Ask Claude the query'], ['C', 'Capture a thought'], ['F', 'Focus on your one thing'], ['P', 'Prep sheet (on a project or person)'], ['g then t', 'Today'], ['g then p', 'Projects'], ['g then e', 'People'], ['g then l', 'Loops'], ['g then r', 'Field guide'], ['g then m', 'Calls'], ['g then i', 'Inbox'], ['g then a', 'Ask'], ['Esc', 'Close / back'], ['?', 'This list']];
+    const keys = [['Ctrl K or /', 'Find anything'], ['Tab (in search)', 'Ask Claude the query'], ['C', 'Capture a thought'], ['F', 'Focus on your one thing'], ['P', 'Brief (on a project or person)'], ['g then t', 'Today'], ['g then p', 'Projects'], ['g then e', 'People'], ['g then l', 'Loops'], ['g then r', 'Field guide'], ['g then m', 'Calls'], ['g then i', 'Inbox'], ['g then a', 'Ask'], ['Esc', 'Close / back'], ['?', 'This list']];
     openOverlay(`<div class="modal" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" style="max-width:520px"><div class="modal-head"><div style="flex:1"><span class="eyebrow">Keyboard</span><h2>Shortcuts</h2></div><button class="btn ghost icon" data-act="close" aria-label="Close">${icon('close')}</button></div>
       <dl class="gloss" style="grid-template-columns:150px 1fr">${keys.map(([k, v]) => `<dt><kbd>${esc(k)}</kbd></dt><dd>${esc(v)}</dd>`).join('')}</dl></div>`);
   }

@@ -406,6 +406,9 @@ kbd {
   border: 1px solid transparent;
   white-space: nowrap;
   line-height: 1.6;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pill.ok { background: var(--ok-soft); color: var(--ok); }
 .pill.warn { background: var(--warn-soft); color: var(--warn); }
