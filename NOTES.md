@@ -22,12 +22,16 @@ deep drill-down, ADHD-friendly (low noise, one-thing-at-a-time, fast recall), hi
       Scope: deep-extract Aug 1 → Oct 12 (current role); earlier = titles only.
 - [~] Extract → `private/research/*.json` (workflow capped at 2 agents on this 4-CPU box, so switched to 26 parallel
       background agents; instructions saved in `private/instructions/` so any agent can be re-run)
-- [ ] Synthesize knowledge base → `private/kb.json`
+- [x] All 19 recording batches extracted (91 work calls, Aug 11 to Oct 9); Drive readers 6/9 done
+- [x] App rebuilt around the owner's own written spec found in Drive (decide-by queue, receipts, conflicts both
+      readings, inventory ladder, bin-packed reel counts, pages not pop-ups, print/CSV, load newer data, offline fonts)
+- [ ] Synthesize knowledge base → `private/kb/*.json`
 - [x] Design + build app (`app/src`), `tools/build.py`, fictional `app/sample-data.json`
 - [x] Windows indexer `tools/Build-FileIndex.ps1` + `tools/Start-CableDesk.cmd` (tested with PowerShell 7)
 - [x] `tools/assemble.py` (research → data file; drops personal/career recordings)
 - [ ] Review pass (UX/ADHD, aesthetics, accuracy, bugs) + fixes
-- [ ] Publish private Artifact; push code; draft PR
+- [ ] Deliver: per the owner's own rule (no real project data on a hosted surface), the real desk ships as a local
+      file only. No claude.ai artifact with real data. The repo has no default branch, so no PR can be opened yet.
 
 ## Design plan (2026-10-12)
 **Form:** one self-contained HTML app (vanilla JS, no build deps, works offline). Two deployments:
