@@ -70,6 +70,7 @@ def main():
     ap.add_argument("--plaud", required=True)
     ap.add_argument("--owner", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--sources", help="optional JSON describing where the data came from (kept in meta.sources)")
     ap.add_argument("--as-of", default=None)
     a = ap.parse_args()
 
@@ -88,6 +89,7 @@ def main():
             "as_of": a.as_of or projects.get("as_of") or latest,
             "plaud_through": latest,
             "owner": owner,
+            "sources": load(a.sources, {}) if a.sources else {},
             "counts": {"meetings": len(meetings), "personal_or_noise_dropped": dropped},
         },
         "projects": projects.get("projects", []),
