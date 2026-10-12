@@ -18,6 +18,7 @@
   const plural = (n, w, p) => `${n} ${n === 1 ? w : p || w + 's'}`;
   const initials = (name) => str(name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
   const capFirst = (s) => str(s).charAt(0).toUpperCase() + str(s).slice(1);
+  const safeUrl = (u) => (/^https?:\/\//i.test(str(u).trim()) ? str(u).trim() : '');
 
   function parseDate(s) {
     const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(str(s));
@@ -632,7 +633,7 @@
           return `<div class="item clickable" role="link" tabindex="0" data-go="person|${esc(h.id)}"><span class="avatar">${esc(initials(h.name))}</span><div style="min-width:0"><div class="t">${esc(h.name)}</div><div class="s">${esc([role, h.org].filter(Boolean).join(' · '))}</div></div><span class="side">${icon('chev')}</span></div>`;
         }).join('') || '<div class="empty">No people linked.</div>'}</div></div></section>
         <section class="section">${sectionHead('Docs & vendors')}<div class="panel panel-pad stack">
-          ${arr(p.drive_links).length ? `<div class="list">${arr(p.drive_links).map((d) => `<div class="item"><span>${icon('ext')}</span><div style="min-width:0"><a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)}</a></div><span></span></div>`).join('')}</div>` : '<div class="muted">No linked Drive docs.</div>'}
+          ${arr(p.drive_links).length ? `<div class="list">${arr(p.drive_links).map((d) => `<div class="item"><span>${icon('ext')}</span><div style="min-width:0">${safeUrl(d.url) ? `<a href="${esc(safeUrl(d.url))}" target="_blank" rel="noopener">${esc(d.title)}</a>` : esc(d.title)}</div><span></span></div>`).join('')}</div>` : '<div class="muted">No linked Drive docs.</div>'}
           ${arr(p.vendors).length ? `<div><div class="mini-h">Vendors</div><div class="row-wrap" style="margin-top:6px">${arr(p.vendors).map((v) => `<span class="chip">${esc(v)}</span>`).join('')}</div></div>` : ''}
         </div></section></div>`;
     } else if (tab === 'files') {
@@ -752,7 +753,7 @@
       const g = R.glossary.slice().sort((a, b) => str(a.term).localeCompare(str(b.term)));
       body = `<div class="panel panel-pad"><dl class="gloss">${g.map((x) => `<dt>${esc(x.term)}</dt><dd>${esc(x.meaning)}</dd>`).join('')}</dl></div>`;
     } else if (tab === 'docs') {
-      body = `<div class="panel panel-pad"><div class="list">${R.key_docs.map((d) => `<div class="item"><span>${icon('ext')}</span><div style="min-width:0">${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener"><strong>${esc(d.title)}</strong></a>` : `<strong>${esc(d.title)}</strong>`}<div class="s">${esc([d.use_when, d.folder].filter(Boolean).join(' · '))}</div></div><span></span></div>`).join('') || '<div class="empty">No docs listed.</div>'}</div></div>`;
+      body = `<div class="panel panel-pad"><div class="list">${R.key_docs.map((d) => `<div class="item"><span>${icon('ext')}</span><div style="min-width:0">${safeUrl(d.url) ? `<a href="${esc(safeUrl(d.url))}" target="_blank" rel="noopener"><strong>${esc(d.title)}</strong></a>` : `<strong>${esc(d.title)}</strong>`}<div class="s">${esc([d.use_when, d.folder].filter(Boolean).join(' · '))}</div></div><span></span></div>`).join('') || '<div class="empty">No docs listed.</div>'}</div></div>`;
     } else if (tab === 'commercial') {
       body = `<div class="panel panel-pad"><div class="list">${R.pricing_and_commercial.map((c) => `<div class="item"><span class="bullet"></span><div style="min-width:0"><div class="t">${esc(c.topic)}</div><div class="s" style="color:var(--ink-2)">${esc(c.detail)}</div>${c.source ? `<div class="s">${srcLabel(c.source)}</div>` : ''}</div><span class="side mono">${esc(c.as_of || '')}</span></div>`).join('') || '<div class="empty">Nothing captured.</div>'}</div></div>`;
     }
@@ -1137,7 +1138,7 @@ ${text.slice(0, 180000)}
     R.cable_catalog.forEach((c, i) => add('cable', 'c' + i, c.item, [c.type, c.inventory_or_stock].filter(Boolean).join(' · '), [c.notes, arr(c.where_used).join(' '), arr(c.vendors).join(' ')], c, 'guide||cable'));
     R.glossary.forEach((g, i) => add('glossary', 'g' + i, g.term, g.meaning, [], g, 'guide||glossary'));
     R.processes.forEach((p, i) => add('process', 'pr' + i, p.name, arr(p.steps).slice(0, 2).join(' → '), [arr(p.steps).join(' '), p.raci], p, 'guide||process'));
-    R.key_docs.forEach((d, i) => add('doc', 'd' + i, d.title, d.use_when || d.folder, [d.folder], d, d.url ? 'url:' + d.url : 'guide||docs'));
+    R.key_docs.forEach((d, i) => add('doc', 'd' + i, d.title, d.use_when || d.folder, [d.folder], d, safeUrl(d.url) ? 'url:' + safeUrl(d.url) : 'guide||docs'));
     R.pricing_and_commercial.forEach((c, i) => add('commercial', 'pc' + i, c.topic, c.detail, [], c, 'guide||commercial'));
     D.vendors.forEach((v, i) => add('vendor', 'v' + i, v.name, [v.type, v.supplies].filter(Boolean).join(' · '), [v.notes, arr(v.contacts).join(' ')], v, 'people'));
     if (FILES) FILES.files.slice(0, 6000).forEach((f, i) => add('file', 'f' + i, str(f.p).split(/[\\/]/).pop(), str(f.p), [], f, 'file:' + i));
