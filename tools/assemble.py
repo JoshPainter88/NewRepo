@@ -16,6 +16,7 @@ Personal, career and ambient recordings are dropped from the Calls log so the pa
 """
 import argparse
 import glob
+import re
 import json
 import os
 import pathlib
@@ -64,6 +65,31 @@ def meetings_from(plaud_dir):
     return out, dropped, latest
 
 
+BANNED = ["canonical", "artifact", "adversarial", "deterministic", "holistic", "leverage", "utilize", "paradigm", "robust",
+          "seamless", "framework", "methodology", "streamline", "synergy", "granular", "ecosystem", "orchestrate",
+          "facilitate", "optimize"]
+
+
+def scrub(obj, report, path="$"):
+    """House style for every face: no em or en dashes. Counts banned words so they can be fixed at the source."""
+    if isinstance(obj, dict):
+        return {k: scrub(v, report, f"{path}.{k}") for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [scrub(v, report, f"{path}[{i}]") for i, v in enumerate(obj)]
+    if isinstance(obj, str):
+        t = re.sub(r"(?<=\d)\s*\u2013\s*(?=\d)", "-", obj)          # 9300–9400 -> 9300-9400
+        t = re.sub(r"\s*[\u2014\u2013]\s*", ", ", t)                  # dashes in prose -> comma
+        t = t.replace(",,", ",")
+        if t != obj:
+            report["dashes"] += 1
+        low = t.lower()
+        for w in BANNED:
+            if re.search(r"\b" + w, low):
+                report["banned"].setdefault(w, []).append(path)
+        return t
+    return obj
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--kb", required=True)
@@ -102,11 +128,16 @@ def main():
         "meetings": meetings,
         "brief": brief,
     }
+    report = {"dashes": 0, "banned": {}}
+    data = scrub(data, report)
     pathlib.Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
     print(f"wrote {a.out}: {len(data['projects'])} projects, {len(data['people'])} people, {len(data['loops'])} loops, "
           f"{len(meetings)} calls ({dropped} personal/noise dropped), through {latest}")
+    print(f"style scrub: {report['dashes']} strings had dashes replaced")
+    for w, paths in sorted(report["banned"].items()):
+        print(f"  banned word '{w}' x{len(paths)}, e.g. {paths[0]}")
 
 
 if __name__ == "__main__":
