@@ -17,7 +17,7 @@
 [CmdletBinding()]
 param(
   # Folder to index.
-  [string]$Root = 'C:\Work\PRIMORIS ACTIVE FOLDER 8.21.26',
+  [string]$Root = 'C:\Work',
   # Where cable-desk.html lives. Default: this script's folder, or ..\dist when run from the repo.
   [string]$OutDir = '',
   # Safety cap so a huge share cannot freeze the page.
