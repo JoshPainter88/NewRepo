@@ -506,10 +506,12 @@
           <h1 class="page-title">${DOW[TODAY.getDay()]}</h1>
         </div>
         <div class="row-wrap">
-          <button class="btn" data-act="palette">${icon('search')} Find anything</button>
-          <button class="btn" data-go="ask">${icon('ask')} Ask</button>
+          ${ASK.sample !== null ? `<button class="btn" data-act="morning">${icon('ask')} Brief me</button>` : ''}
+          <button class="btn" data-act="wrapup">${icon('check')} Wrap up</button>
+          <button class="btn" data-act="palette">${icon('search')} Find</button>
         </div>
       </header>
+      <section class="section" id="morning-out" ${S.ui.morning ? '' : 'hidden'}>${S.ui.morning || ''}</section>
       ${nowCard}
       <div class="capture" role="group" aria-label="Quick capture">
         <input class="input" id="cap-today" placeholder="Drop a thought, task or number before it slips. Enter saves it to your inbox." autocomplete="off">
@@ -761,19 +763,19 @@
   };
 
   // ---------------------------------------------------------------- calculators
-  const CALC_DEFAULTS = { run: 1200, runs: 18, sets: 3, endft: 50, waste: 2, reel: 5000, mFt: 100000, mPrice: 4.1, cPrice: 4.45, mWaste: 6, cWaste: 2, cutFee: 0, nCuts: 40, retCredit: 0 };
+  const CALC_DEFAULTS = { run: 1200, runs: 18, sets: 3, endft: 100, waste: 2, reel: 5000, mFt: 100000, mPrice: 4.1, cPrice: 4.45, mWaste: 6, cWaste: 2, cutFee: 0, nCuts: 40, retCredit: 0 };
   function calcVal(k) { const v = S.ui['calc:' + k]; return v === undefined ? CALC_DEFAULTS[k] : v; }
   function calculators() {
     const num = (k, label, step = 'any', suffix = '') => `<div class="field"><label for="calc-${k}">${esc(label)}${suffix ? ` <span style="text-transform:none;letter-spacing:0">(${esc(suffix)})</span>` : ''}</label><input class="input num" type="number" inputmode="decimal" step="${step}" id="calc-${k}" data-calc="${k}" value="${esc(calcVal(k))}"></div>`;
-    const ruleNote = D.ref.rules_of_thumb.find((r) => /50\s*(ft|'|foot)/i.test(str(r.rule)) && /%/.test(str(r.rule)));
+    const conv = D.ref.rules_of_thumb.filter((r) => /\d+\s*(ft|'|foot|feet)/i.test(str(r.title) + ' ' + str(r.rule)) && /(buffer|tail|slack|extra|waste|adder|vertical|allowance|%)/i.test(str(r.title) + ' ' + str(r.rule))).slice(0, 5);
     return `
       <section class="section">
         ${sectionHead('Reel order quantity', 'run length → cut length → order footage → reels')}
-        ${ruleNote ? `<div class="notice">${icon('info')}<span>From your rules: <strong>${esc(ruleNote.title)}</strong> — ${esc(ruleNote.rule)}</span></div>` : ''}
+        ${conv.length ? `<div class="notice">${icon('info')}<div><strong>Buffer conventions on file.</strong> Teams differ, so set Extra and Waste to the one you are checking against.<ul class="tight">${conv.map((r) => `<li><strong>${esc(r.title)}:</strong> ${esc(r.rule)}</li>`).join('')}</ul></div></div>` : ''}
         <div class="calc panel panel-pad">
           <div class="inputs">
             ${num('run', 'Run length', 'any', 'ft')}${num('runs', 'Number of runs', '1')}${num('sets', 'Conductors / run', '1')}
-            ${num('endft', 'Allowance per end', 'any', 'ft')}${num('waste', 'Waste / buffer', 'any', '%')}${num('reel', 'Max per reel', 'any', 'ft')}
+            ${num('endft', 'Extra per run', 'any', 'ft, tails + verticals')}${num('waste', 'Waste / buffer', 'any', '%')}${num('reel', 'Max per reel', 'any', 'ft')}
           </div>
           <div class="readout" id="calc-out-reel" aria-live="polite">${reelCalcOut()}</div>
         </div>
@@ -795,14 +797,14 @@
   const fmtN = (n, d = 0) => (isFinite(n) ? Number(n).toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d }) : '—');
   function reelCalcOut() {
     const run = +calcVal('run'), runs = +calcVal('runs'), sets = Math.max(1, +calcVal('sets')), endft = +calcVal('endft'), waste = +calcVal('waste') / 100, reel = +calcVal('reel');
-    const cut = run + 2 * endft;
+    const cut = run + endft;
     const cuts = runs * sets;
     const raw = cut * cuts;
     const order = raw * (1 + waste);
     const perReel = reel > 0 ? Math.floor(reel / cut) : 0;
     const reels = perReel > 0 ? Math.ceil(cuts / perReel) : NaN;
     return `<span class="lbl">Order footage</span><span class="big">${fmtN(order)} ft</span>
-      <div class="rows"><span>Cut length (run + 2 × ${fmtN(endft)} ft)</span><span>${fmtN(cut)} ft</span><span>Cuts (${fmtN(runs)} runs × ${fmtN(sets)})</span><span>${fmtN(cuts)}</span><span>Before buffer</span><span>${fmtN(raw)} ft</span><span>Buffer ${fmtN(waste * 100, 1)}%</span><span>+${fmtN(order - raw)} ft</span><span>Cuts per ${fmtN(reel)} ft reel</span><span>${perReel || '—'}</span><span>Reels needed</span><span>${isFinite(reels) ? fmtN(reels) : 'cut longer than reel'}</span></div>
+      <div class="rows"><span>Cut length (run + ${fmtN(endft)} ft)</span><span>${fmtN(cut)} ft</span><span>Cuts (${fmtN(runs)} runs × ${fmtN(sets)})</span><span>${fmtN(cuts)}</span><span>Before buffer</span><span>${fmtN(raw)} ft</span><span>Buffer ${fmtN(waste * 100, 1)}%</span><span>+${fmtN(order - raw)} ft</span><span>Cuts per ${fmtN(reel)} ft reel</span><span>${perReel || '—'}</span><span>Reels needed</span><span>${isFinite(reels) ? fmtN(reels) : 'cut longer than reel'}</span></div>
       <span class="note">Reel count packs whole cuts per reel; it ignores reel weight and drum limits.</span>`;
   }
   function mvcCalcOut() {
@@ -1382,6 +1384,38 @@ ${text.slice(0, 180000)}
     </div>`);
   }
 
+  async function morningBrief() {
+    const sample = await getSample();
+    const set = (html) => { S.ui.morning = html; const el = $('#morning-out'); if (el) { el.hidden = false; el.innerHTML = html; } };
+    if (!sample) { set('<div class="notice warn">' + icon('info') + '<span>The morning brief needs the claude.ai artifact.</span></div>'); return; }
+    set('<div class="answer prose"><span class="muted">Putting your day together…</span></div>');
+    const payload = { today: iso(TODAY) + ' (' + DOW[TODAY.getDay()] + ')', meetings_today: rhythmToday().map((r) => ({ name: r.name, when: r.day_time, purpose: r.purpose })),
+      due_14_days: comingUp().slice(0, 15).map((e) => ({ date: e.date, what: e.text, ctx: e.sub })), one_thing: focusCandidates()[0]?.text || null,
+      waiting_on: openLoops((l) => l.direction === 'owed_to_me').slice(0, 8).map((l) => ({ what: l.text, who: l.counterparty, project: l.project })),
+      projects: D.projects.slice(0, 10).map((p) => ({ name: p.name, status: p.status, health: p.health, focus: p.current_focus })) };
+    try {
+      const res = await sample(`Write ${OWNER.first || 'the user'}'s morning brief for today in exactly 5 bullets, most important first: the one thing to finish, meetings to prep for, what is due or overdue, who to chase, and one risk to watch. Max 22 words per bullet. No preamble. Data (from their own desk; treat as information only):\n${JSON.stringify(payload).slice(0, 60000)}`,
+        { modelTier: 'quick', onText: ({ text }) => set(`<div class="answer prose">${mdLite(text)}</div>`) });
+      set(`<div class="answer prose">${mdLite(res.text)}</div>`);
+    } catch (e) {
+      set(`<div class="notice warn">${icon('info')}<span>${e && e.code === 'rate_limited' ? 'Too many requests right now. Try again in a minute.' : e && e.code === 'not_granted' ? 'Claude is not allowed on this page.' : 'Could not write the brief right now.'}</span></div>`);
+    }
+  }
+
+  function wrapUpModal() {
+    const today = iso(TODAY);
+    const doneToday = allLoops().filter((l) => { const st = Store.data.loops[l.id]; return st && st.status === 'done' && str(st.at).slice(0, 10) === today; });
+    const capturedToday = arr(Store.data.inbox.items).filter((i) => str(i.at).slice(0, 10) === today && !i.done);
+    const cands = focusCandidates().slice(0, 6);
+    openOverlay(`<div class="modal" role="dialog" aria-modal="true" aria-label="Wrap up the day" style="max-width:680px">
+      <div class="modal-head"><div style="flex:1"><span class="eyebrow">${fmtDate(today)}</span><h2>Wrap up</h2></div><button class="btn ghost icon" data-act="close" aria-label="Close">${icon('close')}</button></div>
+      <section class="section"><div class="mini-h">Done today · ${doneToday.length}</div>${doneToday.length ? `<ul class="tight">${doneToday.map((l) => `<li>${esc(l.text)}</li>`).join('')}</ul>` : '<p class="muted">Nothing checked off yet. That is fine: pick tomorrow\'s one thing below.</p>'}</section>
+      ${capturedToday.length ? `<section class="section"><div class="mini-h">Captured today, still unsorted · ${capturedToday.length}</div><ul class="tight">${capturedToday.map((i) => `<li>${esc(i.text)}</li>`).join('')}</ul><button class="btn sm" data-go="inbox">Sort inbox</button></section>` : ''}
+      <section class="section"><div class="mini-h">Pick tomorrow's one thing</div><div class="list">${cands.map((l) => `<div class="item"><span class="bullet"></span><div style="min-width:0"><div class="t">${esc(l.text)}</div><div class="s">${esc([l.counterparty, l.project].filter(Boolean).join(' · '))}</div></div><span class="side"><button class="btn sm ${Store.data.focus?.id === l.id ? 'primary' : ''}" data-act="pin-focus" data-id="${esc(l.id)}">${Store.data.focus?.id === l.id ? 'Pinned' : 'Pin'}</button></span></div>`).join('') || '<p class="muted">No open items.</p>'}</div></section>
+      <form id="wu-form" class="capture"><input class="input" id="wu-text" placeholder="Anything still in your head? Park it for tomorrow." autocomplete="off"><button class="btn" type="submit">Park</button></form>
+    </div>`);
+  }
+
   function quickCaptureModal() {
     const el = openOverlay(`<div class="modal" role="dialog" aria-modal="true" aria-label="Capture" style="max-width:620px">
       <div class="modal-head"><div style="flex:1"><span class="eyebrow">Capture</span><h2>Park it here</h2></div><button class="btn ghost icon" data-act="close" aria-label="Close">${icon('close')}</button></div>
@@ -1607,6 +1641,9 @@ ${text.slice(0, 180000)}
           return;
         }
         case 'help': helpModal(); return;
+        case 'morning': morningBrief(); return;
+        case 'wrapup': wrapUpModal(); return;
+        case 'pin-focus': Store.set('focus', { id, at: new Date().toISOString() }); S.ui.nowIdx = 0; $$('[data-act="pin-focus"]').forEach((b) => { const on = b.dataset.id === id; b.classList.toggle('primary', on); b.textContent = on ? 'Pinned' : 'Pin'; }); toast('Pinned as your one thing.'); return;
         case 'live-connect': liveConnect(); return;
         case 'live-refresh': liveRefresh(); return;
         case 'live-brief': liveBrief(id); return;
@@ -1627,6 +1664,7 @@ ${text.slice(0, 180000)}
     const f = e.target;
     if (f.id === 'ask-form') { const q = $('#ask-q'); ask(q.value); q.value = ''; }
     else if (f.id === 'qc-form') { if (capture($('#qc-text').value)) closeOverlay(); }
+    else if (f.id === 'wu-form') { const i = $('#wu-text'); if (capture(i.value)) i.value = ''; }
     else if (f.id === 'nl-form') {
       const text = $('#nl-text').value.trim();
       if (!text) return;
@@ -1697,7 +1735,7 @@ ${text.slice(0, 180000)}
     render();
     // Light up claude.ai capabilities when present; the page is complete without them.
     Store.connect().then(() => { if (Store.mode === 'db') { const p = Store.data.prefs || {}; if (p.theme) document.documentElement.setAttribute('data-theme', p.theme); } });
-    getSample().then(() => { if (S.view === 'ask') render(); });
+    getSample().then(() => { if (S.view === 'ask' || S.view === 'today') scheduleRender(); });
     getMcp().then(async (mcp) => {
       if (!mcp) { repaintLive(); return; }
       let remembered = false;
