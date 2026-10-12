@@ -40,6 +40,9 @@ def build(data_path, files_path, out_path, artifact):
         .replace("/*__FILES__*/", js_literal(files))
         .replace("/*__APP__*/", app.replace("</script", "<\\/script"))
     )
+    # Local copy: also load the optional file index that Build-FileIndex.ps1 writes next to the page.
+    local_scripts = '' if artifact else '<script src="cabledesk-files.js"></script>'
+    page = page.replace("<!--__LOCAL_SCRIPTS__-->", local_scripts)
     if not artifact:
         page = (
             '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
