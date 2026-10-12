@@ -17,7 +17,9 @@ deep drill-down, ADHD-friendly (low noise, one-thing-at-a-time, fast recall), hi
 ## Progress
 - [x] 2026-10-12 Recon: Plaud has ~50+ recent work recordings (Sep–Oct 2026); Drive has a
       transcript "Call library" with archive/cleanup folders.
-- [ ] Inventory all recordings + Drive docs
+- [x] Inventory: ~200 Plaud recordings (Jun→Oct); Drive 'New Primoris folder 8.21.26' mapped (curated
+      desk/open-items/meeting-log docs, reel-plan guides, prior HTML dashboard attempts).
+      Scope: deep-extract Aug 1 → Oct 12 (current role); earlier = titles only.
 - [ ] Extract (workflow fan-out) → `private/research/*.json`
 - [ ] Synthesize knowledge base → `private/kb.json`
 - [ ] Design + build app (`app/`)
