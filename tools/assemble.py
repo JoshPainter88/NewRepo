@@ -7,7 +7,7 @@ Inputs (all private, never committed):
   <kb>/projects.json      {"projects": [...]}
   <kb>/people.json        {"people": [...], "vendors": [...], "rhythm": [...]}
   <kb>/reference.json     {"rules_of_thumb": [...], "cable_catalog": [...], ...}
-  <kb>/open_loops.json    {"loops": [...]}
+  <kb>/open_loops.json    {"loops": [...], "decisions": [...]}
   <kb>/design_brief.json  {...}
   <plaud>/B*.json         per-batch recording extractions -> the Calls log
   <owner>                 {"first": "...", "full": "...", "initials": "...", "org_short": "...", "program": "...", "context": "..."}
@@ -98,6 +98,7 @@ def main():
         "rhythm": people.get("rhythm", []),
         "reference": reference,
         "loops": loops.get("loops", []),
+        "decisions": loops.get("decisions", []),
         "meetings": meetings,
         "brief": brief,
     }

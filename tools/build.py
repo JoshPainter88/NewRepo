@@ -22,6 +22,29 @@ def js_literal(obj) -> str:
     return s.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
+def font_faces() -> str:
+    """@font-face rules with the fonts inlined, so the local copy makes no network request."""
+    import base64
+    fonts_dir = ROOT / "app" / "fonts"
+    rules = []
+    for f in json.loads((fonts_dir / "fonts.json").read_text(encoding="utf-8")):
+        b64 = base64.b64encode((fonts_dir / f["file"]).read_bytes()).decode("ascii")
+        stretch = f"font-stretch:{f['stretch']};" if f.get("stretch") else ""
+        rules.append(
+            "@font-face{font-family:'%s';font-style:normal;font-weight:%s;%sfont-display:swap;"
+            "src:url(data:font/woff2;base64,%s) format('woff2');}" % (f["family"], f["weight"], stretch, b64)
+        )
+    return "<style>" + "".join(rules) + "</style>"
+
+
+GOOGLE_FONTS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">' "\n"
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' "\n"
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900'
+    '&family=JetBrains+Mono:wght@100..800&display=swap">'
+)
+
+
 def build(data_path, files_path, out_path, artifact):
     shell = (SRC / "shell.html").read_text(encoding="utf-8")
     css = (SRC / "styles.css").read_text(encoding="utf-8")
@@ -40,7 +63,8 @@ def build(data_path, files_path, out_path, artifact):
         .replace("/*__FILES__*/", js_literal(files))
         .replace("/*__APP__*/", app.replace("</script", "<\\/script"))
     )
-    # Local copy: also load the optional file index that Build-FileIndex.ps1 writes next to the page.
+    # Local copy: fonts inlined (no network), plus the optional file index Build-FileIndex.ps1 writes next to the page.
+    page = page.replace("<!--__FONTS__-->", GOOGLE_FONTS if artifact else font_faces())
     local_scripts = '' if artifact else '<script src="cabledesk-files.js"></script>'
     page = page.replace("<!--__LOCAL_SCRIPTS__-->", local_scripts)
     if not artifact:

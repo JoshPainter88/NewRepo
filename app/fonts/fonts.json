@@ -1,0 +1,14 @@
+[
+ {
+  "family": "Archivo",
+  "file": "archivo.woff2",
+  "weight": "100 900",
+  "stretch": "62% 125%"
+ },
+ {
+  "family": "JetBrains Mono",
+  "file": "jetbrains-mono.woff2",
+  "weight": "100 800",
+  "stretch": null
+ }
+]

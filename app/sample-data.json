@@ -97,7 +97,38 @@
    "vendors": [
     "Example Wholesale"
    ],
-   "drive_links": []
+   "drive_links": [],
+   "essentials": {
+    "clock": {
+     "label": "Price hold ends",
+     "date": "2026-10-20"
+    },
+    "footage_by_size": [
+     {
+      "size": "1000 kcmil AL",
+      "ft": "410,000 ft"
+     }
+    ],
+    "bores": "18",
+    "manufacturer": "Example Cable Co",
+    "revision": "Rev D",
+    "design_phase": "90%",
+    "electrical_engineer": "Priya Natarajan",
+    "electrical_super": "Not named yet",
+    "wholesale_status": "drafted",
+    "next_delivery": "2026-11-03",
+    "install_method": "trailer pulls",
+    "missing": [
+     "Feeder 3 length",
+     "Signed PO"
+    ],
+    "last_notes": [
+     {
+      "date": "2026-10-06",
+      "note": "Froze all feeders except feeder 3."
+     }
+    ]
+   }
   },
   {
    "id": "lone-mesa",
@@ -144,7 +175,20 @@
    "vendors": [
     "Example Wholesale"
    ],
-   "drive_links": []
+   "drive_links": [],
+   "essentials": {
+    "clock": {
+     "label": "Last reel delivery",
+     "date": "2026-10-24"
+    },
+    "manufacturer": "Example Cable Co",
+    "revision": "Rev C",
+    "design_phase": "IFC",
+    "wholesale_status": "active",
+    "missing": [
+     "Spare count reconciliation"
+    ]
+   }
   },
   {
    "id": "bluestem",
@@ -176,7 +220,14 @@
    "timeline": [],
    "people": [],
    "vendors": [],
-   "drive_links": []
+   "drive_links": [],
+   "essentials": {
+    "design_phase": "60%",
+    "missing": [
+     "LNTP 6",
+     "90% drawings"
+    ]
+   }
   }
  ],
  "people": [
@@ -348,6 +399,124 @@
     "detail": "Holds typically 30 days; extensions need written confirmation.",
     "as_of": "2026-10"
    }
+  ],
+  "conflicts": [
+   {
+    "id": "C1",
+    "topic": "Cut length buffer",
+    "readings": [
+     {
+      "value": "50 ft each end + 2%",
+      "who": "Operations",
+      "date": "2026-09-02",
+      "source": {
+       "type": "plaud",
+       "id": "demo-2"
+      }
+     },
+     {
+      "value": "100 ft + 2% per run",
+      "who": "Engineering",
+      "date": "2026-09-04",
+      "source": {
+       "type": "plaud",
+       "id": "demo-2"
+      }
+     }
+    ],
+    "status": "open",
+    "why_it_matters": "Changes order footage by roughly 3% on long runs."
+   }
+  ],
+  "inventory": [
+   {
+    "item": "1/C 1000 kcmil AL 35kV",
+    "type": "MV",
+    "as_of": "2026-10-06",
+    "lead_time": "18-22 weeks",
+    "pools": [
+     {
+      "name": "Yard A",
+      "ft": 64000,
+      "reels": 9,
+      "source": {
+       "type": "plaud",
+       "id": "demo-1"
+      }
+     },
+     {
+      "name": "Held at distributor",
+      "ft": 56000,
+      "reels": 7
+     },
+     {
+      "name": "On order",
+      "ft": null
+     }
+    ],
+    "allocations": [
+     {
+      "project": "Harrow Creek",
+      "ft": 98000,
+      "status": "Allocated"
+     },
+     {
+      "project": "Bluestem",
+      "ft": null,
+      "status": "Projected"
+     }
+    ],
+    "notes": "Demo row."
+   }
+  ],
+  "careful_with": [
+   {
+    "item": "Do not quote the 2% buffer as agreed",
+    "why": "Ops and engineering still disagree",
+    "say_instead": "Both readings are on the table"
+   }
+  ],
+  "positions": [
+   {
+    "who": "Josh",
+    "text": "Bores and home runs go on master reels.",
+    "topic": "Reel plans"
+   },
+   {
+    "who": "Josh",
+    "text": "No PO without a signed LNTP.",
+    "topic": "Procurement"
+   }
+  ],
+  "putups": [
+   {
+    "size": "1000 kcmil",
+    "planning_ft": 4500,
+    "by_mill": [
+     {
+      "mill": "Mill A",
+      "ft": "4000"
+     },
+     {
+      "mill": "Mill B",
+      "ft": "4100"
+     }
+    ]
+   },
+   {
+    "size": "1250 kcmil",
+    "planning_ft": 3500,
+    "by_mill": [
+     {
+      "mill": "Mill A",
+      "ft": "3500"
+     },
+     {
+      "mill": "Mill B",
+      "ft": "NA"
+     }
+    ]
+   }
   ]
  },
  "loops": [
@@ -373,7 +542,9 @@
    "project": "Harrow Creek",
    "due": "2026-10-13",
    "status": "open",
-   "priority": "now"
+   "priority": "now",
+   "first_seen": "2026-09-24",
+   "times_raised": 2
   },
   {
    "id": "L003",
@@ -391,7 +562,9 @@
    "counterparty": "Dana Ruiz",
    "project": "Lone Mesa",
    "status": "open",
-   "priority": "soon"
+   "priority": "soon",
+   "first_seen": "2026-09-24",
+   "times_raised": 2
   },
   {
    "id": "L005",
@@ -479,5 +652,93 @@
    "facts": []
   }
  ],
- "brief": {}
+ "brief": {
+  "twenty_things": [
+   {
+    "title": "Harrow Creek master-reel PO",
+    "lane": "Procurement",
+    "status": "red",
+    "next": "Release before the price hold ends",
+    "project": "Harrow Creek"
+   },
+   {
+    "title": "Lone Mesa returns and spares",
+    "lane": "Inventory",
+    "status": "amber",
+    "next": "Reconcile counts with the site",
+    "project": "Lone Mesa"
+   },
+   {
+    "title": "Buffer standard",
+    "lane": "Process",
+    "status": "amber",
+    "next": "Get ops and engineering on one adder"
+   },
+   {
+    "title": "Bluestem quantities",
+    "lane": "Reel plan",
+    "status": "green",
+    "next": "Hold until LNTP 6",
+    "project": "Bluestem"
+   }
+  ]
+ },
+ "decisions": [
+  {
+   "id": "D001",
+   "question": "Release the Harrow Creek master-reel PO before the price hold ends?",
+   "decider": "Priya Natarajan",
+   "decide_by": "2026-10-15",
+   "decide_by_alt": "2026-10-16",
+   "slip_consequence": "The price hold lapses on 10/20 and the order reprices at spot.",
+   "options": [
+    "Release now on the 90% takeoff",
+    "Wait for the feeder 3 length, accept the reprice risk"
+   ],
+   "project": "Harrow Creek",
+   "status": "open",
+   "source_refs": [
+    {
+     "type": "plaud",
+     "id": "demo-2",
+     "date": "2026-10-06",
+     "evidence": "Freeze all feeders except feeder 3"
+    }
+   ]
+  },
+  {
+   "id": "D002",
+   "question": "Who approves returning uncut Lone Mesa masters for credit?",
+   "decider": null,
+   "decide_by": null,
+   "slip_consequence": "Leftover reels sit in the yard and the credit window closes.",
+   "options": [
+    "Site superintendent",
+    "Procurement lead"
+   ],
+   "project": "Lone Mesa",
+   "status": "open",
+   "source_refs": []
+  },
+  {
+   "id": "D003",
+   "question": "Hold the last Lone Mesa delivery until spare counts match?",
+   "decider": "Marcus Bell",
+   "decide_by": "2026-10-09",
+   "slip_consequence": "Short-shipped reels may be invoiced in full.",
+   "options": [
+    "Hold",
+    "Release and reconcile after"
+   ],
+   "project": "Lone Mesa",
+   "status": "open",
+   "source_refs": [
+    {
+     "type": "plaud",
+     "id": "demo-1",
+     "date": "2026-10-08"
+    }
+   ]
+  }
+ ]
 }
