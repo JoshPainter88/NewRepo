@@ -391,10 +391,9 @@
     closeOverlay();
     render();
     window.scrollTo({ top: 0 });
-    try {
-      const token = [view, id, tab].filter(Boolean).join('.').replace(/[^A-Za-z0-9._~-]/g, '');
-      history.replaceState(null, '', '#' + token);
-    } catch (e) { /* sandboxed */ }
+    const token = [view, id, tab].filter(Boolean).join('.').replace(/[^A-Za-z0-9._~-]/g, '');
+    try { history.replaceState(null, '', '#' + token); } catch (e) { /* sandboxed */ }
+    try { localStorage.setItem(LS + 'place', token); } catch (e) { /* storage off */ }
   }
   function back() {
     const prev = S.trail.pop();
@@ -403,7 +402,8 @@
     render();
   }
   function fromHash() {
-    const h = str(location.hash).replace(/^#/, '');
+    let h = str(location.hash).replace(/^#/, '');
+    if (!h) { try { h = localStorage.getItem(LS + 'place') || ''; } catch (e) { h = ''; } }
     if (!h) return;
     const [view, ...rest] = h.split('.');
     if (!VIEW_TOKENS.includes(view)) return;
@@ -1961,6 +1961,7 @@ ${text.slice(0, 180000)}
           <div class="row-wrap" style="gap:4px">
             <button class="btn ghost sm" data-act="theme" title="Switch light or dark">${icon('moon')} Theme</button>
             <button class="btn ghost sm" data-act="density" title="Switch calm or compact spacing">${icon('density')} Density</button>
+            <button class="btn ghost sm" data-act="textsize" title="Make text bigger or smaller">Aa Size</button>
             <button class="btn ghost sm" data-act="help" title="Keyboard shortcuts">${icon('keyboard')} Keys</button>
           </div>
           <button class="link" style="font-size:var(--t-xs);font-weight:500" data-go="state">Data as of ${esc(D.meta.as_of ? mdy(D.meta.as_of) : 'unknown')} · state</button>
@@ -2120,6 +2121,15 @@ ${text.slice(0, 180000)}
           return;
         }
         case 'help': helpModal(); return;
+        case 'textsize': {
+          const order = ['', 'large', 'larger'];
+          const cur = document.documentElement.getAttribute('data-text') || '';
+          const next = order[(order.indexOf(cur) + 1) % order.length];
+          if (next) document.documentElement.setAttribute('data-text', next); else document.documentElement.removeAttribute('data-text');
+          Store.set('prefs', Object.assign({}, Store.data.prefs, { text: next }));
+          toast(next ? `Text size: ${next}.` : 'Text size: normal.');
+          return;
+        }
         case 'print': try { window.print(); } catch (x) { /* ignore */ } return;
         case 'reopen-dec': { const next = Object.assign({}, Store.data.decisions); delete next[id]; Store.set('decisions', next); render(); return; }
         case 'revert-data': IDB.del('bundle').then(() => { D = normalize(window.OS_DATA || {}); OWNER = ownerOf(D); DATA_SOURCE = 'built-in'; INDEX = null; buildIndexes(); renderChrome(); render(); toast('Back on the built-in data.'); }); return;
@@ -2236,6 +2246,7 @@ ${text.slice(0, 180000)}
     const prefs = Store.data.prefs || {};
     if (prefs.theme) document.documentElement.setAttribute('data-theme', prefs.theme);
     if (prefs.density) document.documentElement.setAttribute('data-density', prefs.density);
+    if (prefs.text) document.documentElement.setAttribute('data-text', prefs.text);
     buildIndexes();
     renderChrome();
     fromHash();

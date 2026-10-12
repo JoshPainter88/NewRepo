@@ -887,6 +887,10 @@ details.rcpt[open] > summary { color: var(--copper-ink); border-color: var(--cop
 table.grid-ess td { white-space: normal; min-width: 90px; }
 table.grid-ess td:first-child { min-width: 140px; }
 
+/* text size */
+:root[data-text="large"] { font-size: 112.5%; }
+:root[data-text="larger"] { font-size: 125%; }
+
 /* density */
 :root[data-density="compact"] .view { gap: 20px; padding-top: 16px; }
 :root[data-density="compact"] .item { padding: 8px 4px; }
