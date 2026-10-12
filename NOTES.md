@@ -20,10 +20,12 @@ deep drill-down, ADHD-friendly (low noise, one-thing-at-a-time, fast recall), hi
 - [x] Inventory: ~200 Plaud recordings (Jun→Oct); Drive 'New Primoris folder 8.21.26' mapped (curated
       desk/open-items/meeting-log docs, reel-plan guides, prior HTML dashboard attempts).
       Scope: deep-extract Aug 1 → Oct 12 (current role); earlier = titles only.
-- [ ] Extract (workflow fan-out) → `private/research/*.json`
+- [~] Extract → `private/research/*.json` (workflow capped at 2 agents on this 4-CPU box, so switched to 26 parallel
+      background agents; instructions saved in `private/instructions/` so any agent can be re-run)
 - [ ] Synthesize knowledge base → `private/kb.json`
-- [ ] Design + build app (`app/`)
-- [ ] Windows indexer for C:\Work folder (`tools/`)
+- [x] Design + build app (`app/src`), `tools/build.py`, fictional `app/sample-data.json`
+- [x] Windows indexer `tools/Build-FileIndex.ps1` + `tools/Start-CableDesk.cmd` (tested with PowerShell 7)
+- [x] `tools/assemble.py` (research → data file; drops personal/career recordings)
 - [ ] Review pass (UX/ADHD, aesthetics, accuracy, bugs) + fixes
 - [ ] Publish private Artifact; push code; draft PR
 
